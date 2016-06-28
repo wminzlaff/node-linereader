@@ -15,7 +15,6 @@ var path = require('path');
 var util = require('util');
 var events = require('events');
 var iconv = require('iconv-lite');
-var StringDecoder = require('string_decoder').StringDecoder;
 
 // let's make sure we have a setImmediate function (node.js <0.10)
 if (typeof setImmediate === 'undefined') {
@@ -69,21 +68,13 @@ LineReader.prototype._initStream = function () {
 
   function _initStream() {
     var decoderString = "";
-    var decoder;
-    if (['utf8', 'base64', 'ascii'].indexOf(self._encoding) !== -1) {
-      decoder = new StringDecoder(self._encoding);
-    }
     self._readStream.on('error', function (err) {
       self.emit('error', err);
     });
 
     self._readStream.on('data', function (data) {
       self._readStream.pause();
-      if (decoder) {
-        decoderString = iconv.decode(decoder.write(data), self._encoding);
-      } else {
-        decoderString = iconv.decode(data, self._encoding);
-      }
+      decoderString = iconv.decode(data, self._encoding);
       self._lines = self._lines.concat(decoderString.split(/(?:\n|\r\n|\r)/g));
       self._lines[0] = self._lineFragment + self._lines[0];
       self._lineFragment = self._lines.pop() || '';
